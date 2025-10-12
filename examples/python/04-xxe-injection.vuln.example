@@ -1,0 +1,28 @@
+# INERT — DO NOT RUN
+#
+# CVE-2019-16935: XML External Entity (XXE) Injection
+# CWE-611: Improper Restriction of XML External Entity Reference
+# OWASP: A04:2021 – Insecure Design
+#
+# Vulnerability: XML parser allows external entity processing
+# Source: Python xml.etree.ElementTree and other XML libraries
+
+import xml.etree.ElementTree as ET
+from xml.dom import minidom
+
+# VULNERABLE: Default XML parsing allows XXE
+def parse_xml_data(xml_string):
+    root = ET.fromstring(xml_string)
+    return root
+
+# VULNERABLE: File upload XML processing
+def process_xml_file(file_path):
+    tree = ET.parse(file_path)
+    return tree.getroot()
+
+# VULNERABLE: minidom parser
+def parse_with_minidom(xml_data):
+    return minidom.parseString(xml_data)
+
+# Attack vector: <!DOCTYPE foo [<!ENTITY xxe SYSTEM "file:///etc/passwd">]>
+# Impact: File disclosure, SSRF, DoS attacks

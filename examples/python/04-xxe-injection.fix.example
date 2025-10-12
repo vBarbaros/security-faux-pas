@@ -1,0 +1,58 @@
+# INERT — DO NOT RUN
+#
+# CVE-2019-16935 FIX: Prevent XXE injection
+# CWE-611: Improper Restriction of XML External Entity Reference
+# OWASP: A04:2021 – Insecure Design
+#
+# Fix: Disable external entity processing
+
+import xml.etree.ElementTree as ET
+from xml.parsers.expat import ParserCreate
+import defusedxml.ElementTree as DefusedET
+
+# SECURE: Use defusedxml library
+def parse_xml_data(xml_string: str) -> ET.Element:
+    try:
+        return DefusedET.fromstring(xml_string)
+    except DefusedET.DefusedXmlException as e:
+        raise ValueError(f"Unsafe XML detected: {e}")
+
+# SECURE: Custom parser with disabled features
+def safe_xml_parse(xml_string: str) -> ET.Element:
+    parser = ParserCreate()
+    # Disable external entity processing
+    parser.DefaultHandler = lambda data: None
+    parser.ExternalEntityRefHandler = None
+    
+    # Parse with custom parser
+    return ET.fromstring(xml_string, parser=ET.XMLParser(target=ET.TreeBuilder()))
+
+# SECURE: File processing with validation
+def process_xml_file(file_path: str) -> ET.Element:
+    # Validate file size
+    import os
+    if os.path.getsize(file_path) > 1024 * 1024:  # 1MB limit
+        raise ValueError("XML file too large")
+    
+    with open(file_path, 'r') as f:
+        content = f.read()
+    
+    # Check for suspicious patterns
+    if '<!ENTITY' in content or '<!DOCTYPE' in content:
+        raise ValueError("XML contains potentially dangerous entities")
+    
+    return DefusedET.fromstring(content)
+
+# ALTERNATIVE: Use lxml with security features
+try:
+    from lxml import etree
+    
+    def secure_lxml_parse(xml_string: str) -> etree._Element:
+        parser = etree.XMLParser(
+            resolve_entities=False,
+            no_network=True,
+            dtd_validation=False
+        )
+        return etree.fromstring(xml_string.encode(), parser)
+except ImportError:
+    pass

@@ -1,0 +1,42 @@
+# INERT — DO NOT RUN
+#
+# CVE-2021-3177 FIX: Safe buffer operations
+# CWE-120: Buffer Copy without Checking Size of Input
+# OWASP: A06:2021 – Vulnerable and Outdated Components
+#
+# Fix: Input validation and safe buffer handling
+
+import ctypes
+
+MAX_BUFFER_SIZE = 1024 * 1024  # 1MB limit
+
+# SECURE: Validate buffer size and bounds
+def process_memory_data(address: int, size: int) -> bytes:
+    if size <= 0 or size > MAX_BUFFER_SIZE:
+        raise ValueError(f"Invalid buffer size: {size}")
+    
+    if not address:
+        raise ValueError("Invalid memory address")
+    
+    try:
+        return ctypes.string_at(address, size)
+    except (OSError, ValueError) as e:
+        raise RuntimeError(f"Memory access failed: {e}")
+
+# SECURE: Bounds checking and size validation
+def read_buffer(ptr: ctypes.c_void_p, user_size: int) -> bytes:
+    if user_size <= 0 or user_size > MAX_BUFFER_SIZE:
+        raise ValueError(f"Buffer size must be 1-{MAX_BUFFER_SIZE} bytes")
+    
+    try:
+        buffer = ctypes.create_string_buffer(user_size)
+        ctypes.memmove(buffer, ptr, user_size)
+        return buffer.raw
+    except (OSError, ctypes.ArgumentError) as e:
+        raise RuntimeError(f"Buffer operation failed: {e}")
+
+# ALTERNATIVE: Use safer high-level alternatives
+def safe_memory_copy(source: bytes, max_size: int = MAX_BUFFER_SIZE) -> bytes:
+    if len(source) > max_size:
+        raise ValueError("Source data too large")
+    return source[:max_size]

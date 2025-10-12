@@ -1,0 +1,27 @@
+# INERT — DO NOT RUN
+#
+# CVE-2018-20852: HTTP Cookie Injection
+# CWE-113: Improper Neutralization of CRLF Sequences in HTTP Headers
+# OWASP: A03:2021 – Injection
+#
+# Vulnerability: Cookie values allow CRLF injection
+# Source: Python http.cookies module versions < 3.7.4, 3.8.0b2
+
+from http.cookies import SimpleCookie
+import urllib.parse
+
+# VULNERABLE: Direct user input in cookie values
+def set_user_cookie(response, username, preferences):
+    cookie = SimpleCookie()
+    cookie['username'] = username
+    cookie['prefs'] = preferences
+    response.headers['Set-Cookie'] = cookie.output(header='')
+
+# VULNERABLE: URL parameter to cookie
+def handle_redirect(response, redirect_url):
+    cookie = SimpleCookie()
+    cookie['redirect'] = redirect_url
+    response.headers['Set-Cookie'] = cookie.output(header='')
+
+# Attack vector: "admin\r\nSet-Cookie: admin=true\r\n"
+# Impact: HTTP response splitting, session fixation

@@ -1,0 +1,25 @@
+# INERT — DO NOT RUN
+#
+# CVE-2020-26137: CRLF Injection in urllib
+# CWE-93: Improper Neutralization of CRLF Sequences
+# OWASP: A03:2021 – Injection
+#
+# Vulnerability: HTTP header injection via CRLF sequences
+# Source: Python urllib versions < 3.5.10, 3.6.12, 3.7.9, 3.8.5
+
+import urllib.request
+import urllib.parse
+
+# VULNERABLE: User input directly in HTTP headers
+def make_request(url, user_agent):
+    req = urllib.request.Request(url)
+    req.add_header('User-Agent', user_agent)
+    return urllib.request.urlopen(req)
+
+# VULNERABLE: URL parameter injection
+def redirect_user(base_url, redirect_param):
+    redirect_url = f"{base_url}?redirect={redirect_param}"
+    return urllib.request.urlopen(redirect_url)
+
+# Attack vector: "Mozilla/5.0\r\nX-Injected: malicious\r\n\r\n<script>alert(1)</script>"
+# Impact: HTTP response splitting, XSS, cache poisoning

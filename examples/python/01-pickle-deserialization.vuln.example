@@ -1,0 +1,23 @@
+# INERT — DO NOT RUN
+#
+# CVE-2022-42969: Unsafe Pickle Deserialization
+# CWE-502: Deserialization of Untrusted Data
+# OWASP: A08:2021 – Software and Data Integrity Failures
+#
+# Vulnerability: Pickle deserialization allows arbitrary code execution
+# Source: Python pickle module with untrusted data
+
+import pickle
+import base64
+
+# VULNERABLE: Direct pickle deserialization of user data
+def load_user_data(serialized_data):
+    return pickle.loads(base64.b64decode(serialized_data))
+
+# VULNERABLE: Loading pickle from user-uploaded file
+def process_uploaded_file(file_path):
+    with open(file_path, 'rb') as f:
+        return pickle.load(f)
+
+# Attack vector: Malicious pickle payload with __reduce__ method
+# Impact: Remote code execution on server

@@ -1,0 +1,70 @@
+# INERT — DO NOT RUN
+#
+# CVE-2018-20852 FIX: Prevent cookie injection
+# CWE-113: Improper Neutralization of CRLF Sequences in HTTP Headers
+# OWASP: A03:2021 – Injection
+#
+# Fix: Input sanitization and validation
+
+from http.cookies import SimpleCookie
+import urllib.parse
+import re
+
+# SECURE: Sanitize cookie values
+def set_user_cookie(response, username: str, preferences: str):
+    # Remove CRLF and control characters
+    clean_username = re.sub(r'[\r\n\x00-\x1f\x7f]', '', username)
+    clean_prefs = re.sub(r'[\r\n\x00-\x1f\x7f]', '', preferences)
+    
+    # Validate length
+    if len(clean_username) > 50 or len(clean_prefs) > 200:
+        raise ValueError("Cookie value too long")
+    
+    # Validate characters (alphanumeric + safe chars only)
+    if not re.match(r'^[a-zA-Z0-9_.-]*$', clean_username):
+        raise ValueError("Invalid characters in username")
+    
+    cookie = SimpleCookie()
+    cookie['username'] = clean_username
+    cookie['prefs'] = urllib.parse.quote(clean_prefs)
+    
+    # Set security attributes
+    cookie['username']['secure'] = True
+    cookie['username']['httponly'] = True
+    cookie['username']['samesite'] = 'Strict'
+    
+    response.headers['Set-Cookie'] = cookie.output(header='')
+
+# SECURE: URL validation and encoding
+def handle_redirect(response, redirect_url: str):
+    # Validate URL format
+    parsed = urllib.parse.urlparse(redirect_url)
+    if not parsed.scheme or not parsed.netloc:
+        raise ValueError("Invalid redirect URL")
+    
+    # Only allow specific domains
+    allowed_domains = ['example.com', 'subdomain.example.com']
+    if parsed.netloc not in allowed_domains:
+        raise ValueError("Redirect to unauthorized domain")
+    
+    cookie = SimpleCookie()
+    cookie['redirect'] = urllib.parse.quote(redirect_url, safe='')
+    cookie['redirect']['secure'] = True
+    cookie['redirect']['httponly'] = True
+    
+    response.headers['Set-Cookie'] = cookie.output(header='')
+
+# ALTERNATIVE: Use secure cookie library
+def secure_cookie_set(response, name: str, value: str):
+    # Use base64 encoding for complex values
+    import base64
+    encoded_value = base64.b64encode(value.encode()).decode()
+    
+    cookie = SimpleCookie()
+    cookie[name] = encoded_value
+    cookie[name]['secure'] = True
+    cookie[name]['httponly'] = True
+    cookie[name]['samesite'] = 'Strict'
+    cookie[name]['max-age'] = 3600  # 1 hour
+    
+    response.headers['Set-Cookie'] = cookie.output(header='')

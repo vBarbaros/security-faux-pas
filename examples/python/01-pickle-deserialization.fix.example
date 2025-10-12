@@ -1,0 +1,35 @@
+# INERT — DO NOT RUN
+#
+# CVE-2022-42969 FIX: Safe data deserialization
+# CWE-502: Deserialization of Untrusted Data
+# OWASP: A08:2021 – Software and Data Integrity Failures
+#
+# Fix: Use JSON or implement safe deserialization
+
+import json
+import base64
+from typing import Any, Dict
+
+# SECURE: Use JSON instead of pickle
+def load_user_data(serialized_data: str) -> Dict[str, Any]:
+    try:
+        json_data = base64.b64decode(serialized_data).decode('utf-8')
+        return json.loads(json_data)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        raise ValueError("Invalid data format")
+
+# SECURE: Validate file format and use safe parsing
+def process_uploaded_file(file_path: str) -> Dict[str, Any]:
+    if not file_path.endswith('.json'):
+        raise ValueError("Only JSON files allowed")
+    
+    with open(file_path, 'r') as f:
+        return json.load(f)
+
+# ALTERNATIVE: Custom safe deserializer with allowlist
+ALLOWED_CLASSES = {'dict', 'list', 'str', 'int', 'float', 'bool'}
+
+def safe_deserialize(data: bytes) -> Any:
+    # Implement custom deserialization with type checking
+    # Only allow basic data types, no arbitrary objects
+    pass

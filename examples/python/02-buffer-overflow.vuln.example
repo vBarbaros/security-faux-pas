@@ -1,0 +1,24 @@
+# INERT — DO NOT RUN
+#
+# CVE-2021-3177: Buffer Overflow in ctypes
+# CWE-120: Buffer Copy without Checking Size of Input
+# OWASP: A06:2021 – Vulnerable and Outdated Components
+#
+# Vulnerability: ctypes string_at function buffer overflow
+# Source: Python versions < 3.6.13, 3.7.10, 3.8.8, 3.9.2
+
+import ctypes
+
+# VULNERABLE: Unchecked buffer operations
+def process_memory_data(address, size):
+    # Direct memory access without bounds checking
+    return ctypes.string_at(address, size)
+
+# VULNERABLE: User-controlled buffer size
+def read_buffer(ptr, user_size):
+    buffer = ctypes.create_string_buffer(user_size)
+    ctypes.memmove(buffer, ptr, user_size)
+    return buffer.raw
+
+# Attack vector: Large size parameter causing buffer overflow
+# Impact: Memory corruption, potential code execution

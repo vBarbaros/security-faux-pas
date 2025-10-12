@@ -63,6 +63,7 @@ security-faux-pas/
 - See `docs/mapping.md` for CWE/OWASP references.
 - Browse language-specific folders:
   - [🟦 TypeScript examples](examples/typescript/README.md)
+  - [🐍 Python examples](examples/python/README.md)
 
 ## 🔬 Need runnable labs?
 Create a **private, isolated training environment** under supervision.  

@@ -1,0 +1,45 @@
+# INERT — DO NOT RUN
+#
+# CVE-2020-26137 FIX: Prevent CRLF injection
+# CWE-93: Improper Neutralization of CRLF Sequences
+# OWASP: A03:2021 – Injection
+#
+# Fix: Input sanitization and validation
+
+import urllib.request
+import urllib.parse
+import re
+
+# SECURE: Sanitize header values
+def make_request(url: str, user_agent: str) -> urllib.request.Request:
+    # Remove CRLF sequences and control characters
+    clean_user_agent = re.sub(r'[\r\n\x00-\x1f\x7f]', '', user_agent)
+    
+    # Limit header length
+    if len(clean_user_agent) > 200:
+        raise ValueError("User-Agent header too long")
+    
+    req = urllib.request.Request(url)
+    req.add_header('User-Agent', clean_user_agent)
+    return urllib.request.urlopen(req)
+
+# SECURE: URL validation and encoding
+def redirect_user(base_url: str, redirect_param: str) -> urllib.request.Request:
+    # Validate base URL format
+    parsed_base = urllib.parse.urlparse(base_url)
+    if not parsed_base.scheme or not parsed_base.netloc:
+        raise ValueError("Invalid base URL")
+    
+    # Sanitize and encode redirect parameter
+    clean_redirect = re.sub(r'[\r\n]', '', redirect_param)
+    encoded_redirect = urllib.parse.quote(clean_redirect, safe='')
+    
+    redirect_url = f"{base_url}?redirect={encoded_redirect}"
+    return urllib.request.urlopen(redirect_url)
+
+# ALTERNATIVE: Use requests library with better security defaults
+import requests
+
+def safe_request(url: str, user_agent: str) -> requests.Response:
+    headers = {'User-Agent': user_agent}
+    return requests.get(url, headers=headers, timeout=30)

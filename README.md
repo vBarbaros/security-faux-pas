@@ -1,3 +1,5 @@
+<img src="assets/linkedin-profile-october-2025.png" alt="LinkedIn Profile Header" style="width: 100%; height: 300px; object-fit: cover; object-position: center;">
+
 # security-faux-pas — intentionally *inert* vulnerable examples (educational)
 
 **READ THIS FIRST — DO NOT RUN ANY CODE IN THIS REPOSITORY.**

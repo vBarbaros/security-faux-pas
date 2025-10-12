@@ -1,0 +1,50 @@
+/*
+ * INERT — DO NOT RUN
+ * 
+ * CVE-2020-28469 FIX: Prevent path traversal attacks
+ * CWE-22: Improper Limitation of a Pathname to a Restricted Directory
+ * OWASP: A01:2021 – Broken Access Control
+ * 
+ * Fix: Path validation and normalization
+ */
+
+import * as glob from 'glob';
+import * as fs from 'fs';
+import * as path from 'path';
+
+// SECURE: Validate and restrict file patterns
+function readUserFiles(pattern: string, baseDir: string = './safe-uploads') {
+  // Sanitize pattern - remove dangerous sequences
+  const sanitized = pattern.replace(/\.\./g, '');
+  const fullPattern = path.join(baseDir, sanitized);
+  
+  const files = glob.sync(fullPattern);
+  
+  // Ensure all files are within base directory
+  const resolvedBase = path.resolve(baseDir);
+  const safeFiles = files.filter(file => {
+    const resolvedFile = path.resolve(file);
+    return resolvedFile.startsWith(resolvedBase);
+  });
+  
+  return safeFiles.map(file => ({
+    name: path.basename(file),
+    content: fs.readFileSync(file, 'utf8')
+  }));
+}
+
+// SECURE: Path validation and normalization
+function serveFile(filename: string, baseDir: string = './uploads') {
+  // Normalize and validate path
+  const safePath = path.normalize(filename).replace(/^(\.\.[\/\\])+/, '');
+  const fullPath = path.join(baseDir, safePath);
+  const resolvedPath = path.resolve(fullPath);
+  const resolvedBase = path.resolve(baseDir);
+  
+  // Ensure file is within base directory
+  if (!resolvedPath.startsWith(resolvedBase)) {
+    throw new Error('Access denied: Path traversal detected');
+  }
+  
+  return fs.readFileSync(resolvedPath, 'utf8');
+}

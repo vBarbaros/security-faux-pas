@@ -1,0 +1,42 @@
+/*
+ * INERT — DO NOT RUN
+ * 
+ * CVE-2021-23337 FIX: Prevent command injection in templates
+ * CWE-94: Improper Control of Generation of Code
+ * OWASP: A03:2021 – Injection
+ * 
+ * Fix: Input sanitization and safe template options
+ */
+
+import * as _ from 'lodash';
+
+// SECURE: Sanitize input and use safe template options
+function renderTemplate(userInput: string, data: any) {
+  // Sanitize user input - remove dangerous characters
+  const sanitized = userInput.replace(/[<>{}$]/g, '');
+  const template = _.template(`Hello <%= name %>!`, {
+    interpolate: /<%=([\s\S]+?)%>/g,
+    evaluate: false, // Disable code evaluation
+    escape: /<%-([\s\S]+?)%>/g
+  });
+  return template({ name: sanitized });
+}
+
+// SECURE: Use allowlist of safe templates
+const SAFE_TEMPLATES = {
+  greeting: 'Hello <%= name %>!',
+  welcome: 'Welcome <%= name %> to our service!'
+};
+
+function processUserTemplate(templateKey: string, data: any) {
+  const templateString = SAFE_TEMPLATES[templateKey as keyof typeof SAFE_TEMPLATES];
+  if (!templateString) {
+    throw new Error('Invalid template');
+  }
+  
+  const compiled = _.template(templateString, {
+    evaluate: false,
+    interpolate: /<%=([\s\S]+?)%>/g
+  });
+  return compiled(data);
+}

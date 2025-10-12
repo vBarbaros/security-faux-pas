@@ -1,0 +1,29 @@
+/*
+ * INERT — DO NOT RUN
+ * 
+ * CVE-2021-23337: Command Injection in Lodash template
+ * CWE-94: Improper Control of Generation of Code
+ * OWASP: A03:2021 – Injection
+ * 
+ * Vulnerability: Template compilation allows code execution
+ * Source: Lodash versions < 4.17.21
+ */
+
+import * as _ from 'lodash';
+
+// VULNERABLE: User input directly in template
+function renderTemplate(userInput: string, data: any) {
+  const template = _.template(`Hello ${userInput}!`);
+  return template(data);
+}
+
+// VULNERABLE: Dynamic template from user data
+function processUserTemplate(templateString: string, data: any) {
+  const compiled = _.template(templateString);
+  return compiled(data);
+}
+
+/*
+ * Attack vector: "${global.process.mainModule.require('child_process').execSync('rm -rf /')}"
+ * Impact: Remote code execution on server
+ */

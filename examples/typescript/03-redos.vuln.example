@@ -1,0 +1,22 @@
+/*
+ * INERT — DO NOT RUN
+ * 
+ * CVE-2022-25883: ReDoS in semver package
+ * CWE-1333: Inefficient Regular Expression Complexity
+ * OWASP: A06:2021 – Vulnerable and Outdated Components
+ * 
+ * Vulnerability: Catastrophic backtracking in version parsing regex
+ * Source: semver package versions < 5.7.2, 6.3.1, 7.5.2
+ */
+
+// VULNERABLE: Regex with catastrophic backtracking
+const SEMVER_REGEX = /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$/;
+
+function parseVersion(version: string) {
+  return SEMVER_REGEX.test(version);
+}
+
+/*
+ * Attack vector: "1.1.1-" + "a".repeat(50000)
+ * Impact: CPU exhaustion via ReDoS attack
+ */

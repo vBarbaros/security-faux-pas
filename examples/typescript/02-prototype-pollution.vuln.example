@@ -1,0 +1,28 @@
+/*
+ * INERT — DO NOT RUN
+ * 
+ * CVE-2023-26136: Prototype Pollution in tough-cookie
+ * CWE-1321: Improperly Controlled Modification of Object Prototype Attributes
+ * OWASP: A08:2021 – Software and Data Integrity Failures
+ * 
+ * Vulnerability: Cookie parsing allows __proto__ pollution
+ * Source: tough-cookie library versions < 4.1.3
+ */
+
+// VULNERABLE: Direct property assignment without validation
+function parseCookie(cookieString: string) {
+  const cookie: any = {};
+  const pairs = cookieString.split(';');
+  
+  pairs.forEach(pair => {
+    const [key, value] = pair.split('=');
+    cookie[key.trim()] = value?.trim();
+  });
+  
+  return cookie;
+}
+
+/*
+ * Attack vector: "__proto__[isAdmin]=true" in cookie
+ * Impact: Prototype pollution leading to privilege escalation
+ */

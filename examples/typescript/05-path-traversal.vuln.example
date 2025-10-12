@@ -1,0 +1,33 @@
+/*
+ * INERT — DO NOT RUN
+ * 
+ * CVE-2020-28469: Path Traversal in Glob package
+ * CWE-22: Improper Limitation of a Pathname to a Restricted Directory
+ * OWASP: A01:2021 – Broken Access Control
+ * 
+ * Vulnerability: Insufficient path validation allows directory traversal
+ * Source: Glob package versions < 7.1.7
+ */
+
+import * as glob from 'glob';
+import * as fs from 'fs';
+
+// VULNERABLE: Direct user input in file path operations
+function readUserFiles(pattern: string) {
+  const files = glob.sync(pattern);
+  return files.map(file => ({
+    name: file,
+    content: fs.readFileSync(file, 'utf8')
+  }));
+}
+
+// VULNERABLE: No path validation
+function serveFile(filename: string) {
+  const filePath = `./uploads/${filename}`;
+  return fs.readFileSync(filePath, 'utf8');
+}
+
+/*
+ * Attack vector: "../../../etc/passwd" or "../../.env"
+ * Impact: Access to sensitive files outside intended directory
+ */

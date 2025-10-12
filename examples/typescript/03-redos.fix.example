@@ -1,0 +1,37 @@
+/*
+ * INERT — DO NOT RUN
+ * 
+ * CVE-2022-25883 FIX: Prevent ReDoS in version parsing
+ * CWE-1333: Inefficient Regular Expression Complexity
+ * OWASP: A06:2021 – Vulnerable and Outdated Components
+ * 
+ * Fix: Input length validation and safer parsing approach
+ */
+
+// SECURE: Length validation and simpler parsing
+function parseVersion(version: string): boolean {
+  // Prevent ReDoS by limiting input length
+  if (version.length > 256) {
+    return false;
+  }
+  
+  // Simple split-based validation instead of complex regex
+  const parts = version.split('.');
+  if (parts.length !== 3) return false;
+  
+  return parts.every(part => {
+    const [num] = part.split('-');
+    return /^\d+$/.test(num) && parseInt(num, 10) >= 0;
+  });
+}
+
+// ALTERNATIVE: Use established library
+import { valid } from 'semver';
+
+function parseVersionSafe(version: string): boolean {
+  try {
+    return valid(version) !== null;
+  } catch {
+    return false;
+  }
+}

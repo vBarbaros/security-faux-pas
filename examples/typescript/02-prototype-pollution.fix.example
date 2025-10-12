@@ -1,0 +1,42 @@
+/*
+ * INERT — DO NOT RUN
+ * 
+ * CVE-2023-26136 FIX: Prevent prototype pollution in cookie parsing
+ * CWE-1321: Improperly Controlled Modification of Object Prototype Attributes
+ * OWASP: A08:2021 – Software and Data Integrity Failures
+ * 
+ * Fix: Use Object.create(null) and validate property names
+ */
+
+// SECURE: Null prototype object and property validation
+function parseCookie(cookieString: string) {
+  const cookie = Object.create(null);
+  const pairs = cookieString.split(';');
+  
+  pairs.forEach(pair => {
+    const [key, value] = pair.split('=');
+    const trimmedKey = key.trim();
+    
+    // Prevent prototype pollution
+    if (trimmedKey === '__proto__' || trimmedKey === 'constructor' || trimmedKey === 'prototype') {
+      return;
+    }
+    
+    cookie[trimmedKey] = value?.trim();
+  });
+  
+  return cookie;
+}
+
+// ALTERNATIVE: Use Map for safer key-value storage
+function parseCookieMap(cookieString: string): Map<string, string> {
+  const cookie = new Map();
+  const pairs = cookieString.split(';');
+  
+  pairs.forEach(pair => {
+    const [key, value] = pair.split('=');
+    cookie.set(key.trim(), value?.trim());
+  });
+  
+  return cookie;
+}

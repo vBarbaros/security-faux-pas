@@ -64,6 +64,7 @@ security-faux-pas/
 - Browse language-specific folders:
   - [🟦 TypeScript examples](examples/typescript/README.md)
   - [🐍 Python examples](examples/python/README.md)
+  - [☕ Java examples](examples/java/README.md)
 
 ## 🔬 Need runnable labs?
 Create a **private, isolated training environment** under supervision.  

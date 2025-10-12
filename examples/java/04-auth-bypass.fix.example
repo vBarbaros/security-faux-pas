@@ -1,0 +1,99 @@
+/*
+ * INERT — DO NOT RUN
+ * 
+ * CVE-2020-5421 FIX: Prevent authorization bypass
+ * CWE-863: Incorrect Authorization
+ * OWASP: A01:2021 – Broken Access Control
+ * 
+ * Fix: Sanitize headers, validate redirects, secure file access
+ */
+
+import org.springframework.web.bind.annotation.*;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
+import java.util.regex.Pattern;
+import java.nio.file.Paths;
+
+@RestController
+public class SecureFileController {
+    
+    private static final Pattern SAFE_FILENAME = Pattern.compile("^[a-zA-Z0-9._-]+$");
+    private static final Set<String> ALLOWED_REDIRECTS = Set.of(
+        "/dashboard", "/profile", "/settings"
+    );
+    
+    // SECURE: Sanitize filename and validate
+    @GetMapping("/download/{filename}")
+    public ResponseEntity<Resource> downloadFile(@PathVariable String filename) {
+        // Validate filename format
+        if (!SAFE_FILENAME.matcher(filename).matches()) {
+            throw new IllegalArgumentException("Invalid filename");
+        }
+        
+        // Limit filename length
+        if (filename.length() > 100) {
+            throw new IllegalArgumentException("Filename too long");
+        }
+        
+        Resource file = loadFileAsResource(filename);
+        
+        // Sanitize filename for header (remove CRLF)
+        String safeFilename = filename.replaceAll("[\\r\\n]", "");
+        
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, 
+                       "attachment; filename=\"" + safeFilename + "\"")
+                .header(HttpHeaders.CONTENT_TYPE, "application/octet-stream")
+                .body(file);
+    }
+    
+    // SECURE: Validate redirect URLs
+    @PostMapping("/login")
+    public String login(@RequestParam String username, 
+                       @RequestParam String password,
+                       @RequestParam(required = false) String redirect) {
+        
+        if (authenticate(username, password)) {
+            if (redirect != null) {
+                // Only allow predefined redirect URLs
+                if (ALLOWED_REDIRECTS.contains(redirect)) {
+                    return "redirect:" + redirect;
+                }
+                // Log suspicious redirect attempt
+                logger.warn("Blocked redirect attempt to: {}", redirect);
+            }
+            return "redirect:/dashboard";
+        }
+        return "login";
+    }
+    
+    // SECURE: Path traversal protection
+    @GetMapping("/files/**")
+    public ResponseEntity<Resource> serveFile(HttpServletRequest request) {
+        String path = request.getRequestURI().substring("/files/".length());
+        
+        // Normalize path and prevent traversal
+        String normalizedPath = Paths.get(path).normalize().toString();
+        if (normalizedPath.contains("..") || normalizedPath.startsWith("/")) {
+            throw new SecurityException("Path traversal attempt detected");
+        }
+        
+        // Validate file extension
+        String extension = getFileExtension(normalizedPath);
+        Set<String> allowedExtensions = Set.of("pdf", "txt", "jpg", "png");
+        if (!allowedExtensions.contains(extension.toLowerCase())) {
+            throw new IllegalArgumentException("File type not allowed");
+        }
+        
+        Resource file = loadFileAsResource(normalizedPath);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, "application/octet-stream")
+                .body(file);
+    }
+    
+    private String getFileExtension(String filename) {
+        int lastDot = filename.lastIndexOf('.');
+        return lastDot > 0 ? filename.substring(lastDot + 1) : "";
+    }
+}

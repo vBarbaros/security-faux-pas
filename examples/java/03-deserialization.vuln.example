@@ -1,0 +1,44 @@
+/*
+ * INERT — DO NOT RUN
+ * 
+ * CVE-2021-42013: Java Deserialization RCE
+ * CWE-502: Deserialization of Untrusted Data
+ * OWASP: A08:2021 – Software and Data Integrity Failures
+ * 
+ * Vulnerability: Unsafe deserialization of user data
+ * Source: Various Java applications using ObjectInputStream
+ */
+
+import java.io.*;
+import java.util.Base64;
+
+public class VulnerableDeserialization {
+    
+    // VULNERABLE: Direct deserialization of user input
+    public Object deserializeUserData(String base64Data) throws Exception {
+        byte[] data = Base64.getDecoder().decode(base64Data);
+        ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
+        return ois.readObject();
+    }
+    
+    // VULNERABLE: Session deserialization
+    public void loadSession(HttpServletRequest request) throws Exception {
+        String sessionData = request.getParameter("session");
+        if (sessionData != null) {
+            byte[] data = Base64.getDecoder().decode(sessionData);
+            ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(data));
+            Object session = ois.readObject();
+        }
+    }
+    
+    // VULNERABLE: File upload deserialization
+    public Object processUpload(InputStream uploadStream) throws Exception {
+        ObjectInputStream ois = new ObjectInputStream(uploadStream);
+        return ois.readObject();
+    }
+}
+
+/*
+ * Attack vector: Malicious serialized object with gadget chain
+ * Impact: Remote code execution via deserialization gadgets
+ */

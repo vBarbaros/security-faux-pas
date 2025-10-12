@@ -1,0 +1,54 @@
+/*
+ * INERT — DO NOT RUN
+ * 
+ * CVE-2021-44228 FIX: Prevent Log4j JNDI injection
+ * CWE-502: Deserialization of Untrusted Data
+ * OWASP: A06:2021 – Vulnerable and Outdated Components
+ * 
+ * Fix: Upgrade Log4j, disable lookups, sanitize input
+ */
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import java.util.regex.Pattern;
+
+public class SecureLogging {
+    private static final Logger logger = LogManager.getLogger(SecureLogging.class);
+    private static final Pattern JNDI_PATTERN = Pattern.compile("\\$\\{[^}]*\\}");
+    
+    // SECURE: Sanitize user input before logging
+    public void logUserInput(String userInput) {
+        String sanitized = sanitizeInput(userInput);
+        logger.info("User provided: {}", sanitized);
+    }
+    
+    // SECURE: Validate and sanitize headers
+    public void logRequest(HttpServletRequest request) {
+        String userAgent = request.getHeader("User-Agent");
+        if (userAgent != null) {
+            String sanitized = sanitizeInput(userAgent);
+            logger.error("Request from: {}", sanitized);
+        }
+    }
+    
+    private String sanitizeInput(String input) {
+        if (input == null) return null;
+        
+        // Remove JNDI lookup patterns
+        String sanitized = JNDI_PATTERN.matcher(input).replaceAll("[FILTERED]");
+        
+        // Limit length
+        if (sanitized.length() > 200) {
+            sanitized = sanitized.substring(0, 200) + "...";
+        }
+        
+        return sanitized;
+    }
+}
+
+/*
+ * Additional mitigations:
+ * 1. Upgrade to Log4j 2.17.1+
+ * 2. Set -Dlog4j2.formatMsgNoLookups=true
+ * 3. Remove JndiLookup class from classpath
+ */

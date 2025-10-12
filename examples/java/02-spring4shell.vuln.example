@@ -1,0 +1,44 @@
+/*
+ * INERT — DO NOT RUN
+ * 
+ * CVE-2022-22965: Spring4Shell Remote Code Execution
+ * CWE-94: Improper Control of Generation of Code
+ * OWASP: A03:2021 – Injection
+ * 
+ * Vulnerability: Class loader manipulation via data binding
+ * Source: Spring Framework 5.3.0-5.3.17, 5.2.0-5.2.19
+ */
+
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+public class VulnerableController {
+    
+    // VULNERABLE: Direct object binding without validation
+    @PostMapping("/user")
+    public String updateUser(@ModelAttribute User user) {
+        // Spring automatically binds request parameters to object properties
+        return "User updated: " + user.getName();
+    }
+    
+    // VULNERABLE: Unrestricted property binding
+    @RequestMapping("/config")
+    public String updateConfig(@RequestParam Map<String, String> params) {
+        // Allows arbitrary property manipulation
+        return "Config updated";
+    }
+}
+
+class User {
+    private String name;
+    private String email;
+    
+    // Getters and setters allow property access
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+}
+
+/*
+ * Attack vector: class.module.classLoader.resources.context.parent.pipeline.first.pattern=%{...}
+ * Impact: Remote code execution via Tomcat valve manipulation
+ */

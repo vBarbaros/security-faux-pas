@@ -1,0 +1,68 @@
+/*
+ * INERT — DO NOT RUN
+ * 
+ * CVE-2022-22965 FIX: Prevent Spring4Shell RCE
+ * CWE-94: Improper Control of Generation of Code
+ * OWASP: A03:2021 – Injection
+ * 
+ * Fix: Restrict data binding and validate input
+ */
+
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
+import javax.validation.Valid;
+import javax.validation.constraints.*;
+
+@RestController
+public class SecureController {
+    
+    // SECURE: Use DTO with validation and restricted binding
+    @PostMapping("/user")
+    public String updateUser(@Valid @RequestBody UserDTO userDTO) {
+        // Use DTO instead of direct model binding
+        User user = new User();
+        user.setName(userDTO.getName());
+        user.setEmail(userDTO.getEmail());
+        return "User updated: " + user.getName();
+    }
+    
+    // SECURE: Explicit parameter validation
+    @RequestMapping("/config")
+    public String updateConfig(
+            @RequestParam @Pattern(regexp="[a-zA-Z0-9_]+") String key,
+            @RequestParam @Size(max=100) String value) {
+        
+        // Allowlist of permitted configuration keys
+        Set<String> allowedKeys = Set.of("theme", "language", "timezone");
+        if (!allowedKeys.contains(key)) {
+            throw new IllegalArgumentException("Invalid configuration key");
+        }
+        
+        return "Config updated: " + key + "=" + value;
+    }
+    
+    // SECURE: Restrict data binding to prevent class loader access
+    @InitBinder
+    public void initBinder(WebDataBinder binder) {
+        // Prevent binding to dangerous properties
+        binder.setDisallowedFields("class.*", "Class.*", "*.class.*", "*.Class.*");
+    }
+}
+
+// SECURE: DTO with validation annotations
+class UserDTO {
+    @NotBlank
+    @Size(max = 50)
+    private String name;
+    
+    @Email
+    @Size(max = 100)
+    private String email;
+    
+    // Getters and setters
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+}

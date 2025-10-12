@@ -1,0 +1,58 @@
+/*
+ * INERT — DO NOT RUN
+ * 
+ * CVE-2020-5421: Spring Security Authorization Bypass
+ * CWE-863: Incorrect Authorization
+ * OWASP: A01:2021 – Broken Access Control
+ * 
+ * Vulnerability: RFD attack via filename manipulation
+ * Source: Spring Security versions < 5.4.4, 5.3.8, 5.2.9
+ */
+
+import org.springframework.web.bind.annotation.*;
+import org.springframework.core.io.Resource;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
+
+@RestController
+public class VulnerableFileController {
+    
+    // VULNERABLE: Direct filename in Content-Disposition header
+    @GetMapping("/download/{filename}")
+    public ResponseEntity<Resource> downloadFile(@PathVariable String filename) {
+        Resource file = loadFileAsResource(filename);
+        
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, 
+                       "attachment; filename=\"" + filename + "\"")
+                .body(file);
+    }
+    
+    // VULNERABLE: User-controlled redirect parameter
+    @PostMapping("/login")
+    public String login(@RequestParam String username, 
+                       @RequestParam String password,
+                       @RequestParam(required = false) String redirect) {
+        
+        if (authenticate(username, password)) {
+            if (redirect != null) {
+                return "redirect:" + redirect;
+            }
+            return "redirect:/dashboard";
+        }
+        return "login";
+    }
+    
+    // VULNERABLE: Insufficient path validation
+    @GetMapping("/files/**")
+    public ResponseEntity<Resource> serveFile(HttpServletRequest request) {
+        String path = request.getRequestURI().substring("/files/".length());
+        Resource file = loadFileAsResource(path);
+        return ResponseEntity.ok().body(file);
+    }
+}
+
+/*
+ * Attack vector: filename="report.pdf\r\nContent-Type: text/html\r\n\r\n<script>alert(1)</script>"
+ * Impact: Reflected File Download (RFD) attack, XSS
+ */

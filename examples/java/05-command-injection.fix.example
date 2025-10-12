@@ -1,0 +1,104 @@
+/*
+ * INERT — DO NOT RUN
+ * 
+ * CVE-2019-0232 FIX: Prevent command injection
+ * CWE-78: Improper Neutralization of Special Elements used in an OS Command
+ * OWASP: A03:2021 – Injection
+ * 
+ * Fix: Input validation, parameterized commands, avoid shell execution
+ */
+
+import java.io.*;
+import java.nio.file.*;
+import java.util.regex.Pattern;
+import javax.servlet.http.*;
+
+public class SecureCommandExecution extends HttpServlet {
+    
+    private static final Pattern SAFE_FILENAME = Pattern.compile("^[a-zA-Z0-9._-]+$");
+    private static final Set<String> ALLOWED_COMMANDS = Set.of("dir", "type", "echo");
+    
+    // SECURE: Avoid command execution, use Java APIs
+    public String readFile(String filename) throws IOException {
+        // Validate filename
+        if (!SAFE_FILENAME.matcher(filename).matches()) {
+            throw new IllegalArgumentException("Invalid filename");
+        }
+        
+        Path filePath = Paths.get("safe-directory", filename).normalize();
+        
+        // Ensure file is within allowed directory
+        if (!filePath.startsWith("safe-directory")) {
+            throw new SecurityException("Path traversal attempt");
+        }
+        
+        return Files.readString(filePath);
+    }
+    
+    // SECURE: Input validation and parameterized execution
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+            throws IOException {
+        String filename = request.getParameter("file");
+        
+        if (filename == null || filename.trim().isEmpty()) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Missing filename");
+            return;
+        }
+        
+        try {
+            String content = readFile(filename);
+            response.getWriter().write(content);
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, 
+                             "File processing failed");
+        }
+    }
+    
+    // SECURE: Allowlist approach with parameterized execution
+    public void runSafeCommand(String command, String argument) throws IOException {
+        // Validate command is allowed
+        if (!ALLOWED_COMMANDS.contains(command)) {
+            throw new IllegalArgumentException("Command not allowed: " + command);
+        }
+        
+        // Validate argument
+        if (!SAFE_FILENAME.matcher(argument).matches()) {
+            throw new IllegalArgumentException("Invalid argument");
+        }
+        
+        // Use ProcessBuilder with separate arguments (no shell interpretation)
+        ProcessBuilder pb = new ProcessBuilder();
+        
+        switch (command) {
+            case "dir":
+                pb.command("cmd.exe", "/c", "dir", argument);
+                break;
+            case "type":
+                pb.command("cmd.exe", "/c", "type", argument);
+                break;
+            default:
+                throw new IllegalArgumentException("Unsupported command");
+        }
+        
+        // Set working directory and environment
+        pb.directory(new File("safe-directory"));
+        pb.environment().clear(); // Remove environment variables
+        
+        Process process = pb.start();
+    }
+    
+    // ALTERNATIVE: Use Java NIO instead of system commands
+    public void listFiles(String directory) throws IOException {
+        Path dirPath = Paths.get("safe-directory", directory).normalize();
+        
+        if (!dirPath.startsWith("safe-directory")) {
+            throw new SecurityException("Directory traversal attempt");
+        }
+        
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dirPath)) {
+            for (Path file : stream) {
+                System.out.println(file.getFileName());
+            }
+        }
+    }
+}

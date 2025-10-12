@@ -1,0 +1,88 @@
+/*
+ * INERT — DO NOT RUN
+ * 
+ * CVE-2021-42013 FIX: Prevent unsafe deserialization
+ * CWE-502: Deserialization of Untrusted Data
+ * OWASP: A08:2021 – Software and Data Integrity Failures
+ * 
+ * Fix: Use safe serialization formats and validation
+ */
+
+import java.io.*;
+import java.util.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+
+public class SecureDeserialization {
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final String SECRET_KEY = "your-secret-key";
+    private static final Set<String> ALLOWED_CLASSES = Set.of(
+        "java.lang.String",
+        "java.lang.Integer",
+        "java.util.HashMap",
+        "com.example.SafeDTO"
+    );
+    
+    // SECURE: Use JSON instead of Java serialization
+    public <T> T deserializeUserData(String jsonData, Class<T> clazz) throws Exception {
+        // Validate class is allowed
+        if (!ALLOWED_CLASSES.contains(clazz.getName())) {
+            throw new SecurityException("Class not allowed for deserialization");
+        }
+        
+        return objectMapper.readValue(jsonData, clazz);
+    }
+    
+    // SECURE: Signed session data
+    public void loadSession(HttpServletRequest request) throws Exception {
+        String sessionData = request.getParameter("session");
+        String signature = request.getParameter("signature");
+        
+        if (sessionData != null && signature != null) {
+            // Verify signature
+            if (!verifySignature(sessionData, signature)) {
+                throw new SecurityException("Invalid session signature");
+            }
+            
+            // Use JSON deserialization
+            SessionDTO session = objectMapper.readValue(sessionData, SessionDTO.class);
+        }
+    }
+    
+    // SECURE: Custom ObjectInputStream with class filtering
+    public Object processUpload(InputStream uploadStream) throws Exception {
+        ObjectInputStream ois = new FilteredObjectInputStream(uploadStream);
+        return ois.readObject();
+    }
+    
+    private boolean verifySignature(String data, String signature) throws Exception {
+        Mac mac = Mac.getInstance("HmacSHA256");
+        SecretKeySpec keySpec = new SecretKeySpec(SECRET_KEY.getBytes(), "HmacSHA256");
+        mac.init(keySpec);
+        
+        byte[] expectedSignature = mac.doFinal(data.getBytes());
+        byte[] providedSignature = Base64.getDecoder().decode(signature);
+        
+        return Arrays.equals(expectedSignature, providedSignature);
+    }
+}
+
+// SECURE: Custom ObjectInputStream with allowlist
+class FilteredObjectInputStream extends ObjectInputStream {
+    public FilteredObjectInputStream(InputStream in) throws IOException {
+        super(in);
+    }
+    
+    @Override
+    protected Class<?> resolveClass(ObjectStreamClass desc) throws IOException, ClassNotFoundException {
+        String className = desc.getName();
+        
+        // Only allow safe classes
+        if (!ALLOWED_CLASSES.contains(className)) {
+            throw new InvalidClassException("Unauthorized deserialization attempt", className);
+        }
+        
+        return super.resolveClass(desc);
+    }
+}

@@ -73,3 +73,17 @@ Create a **private, isolated training environment** under supervision.
 This public repo is intentionally inert.
 
 — The `security-faux-pas` Team
+
+---
+
+## <img src="assets/linkedin-pofile.png" alt="Victor Barbarosh" width="30" style="border-radius: 50%; vertical-align: middle;"> Author
+
+Created by **Victor Barbarosh** - 🔐 Security by Design Specialist & 💻 Senior Full Stack Developer @ Ericsson | Creator of security-faux-pas repo | 🎓 M.Sc. Computer Science (AI/RL) @ McGill
+
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Follow-blue?style=flat&logo=linkedin)](https://www.linkedin.com/in/victor-barbarosh-56a03743/)
+
+*Follow for more security insights and educational content!*
+
+---
+
+© 2025 Victor Barbarosh. Licensed under the MIT License.

@@ -1,0 +1,29 @@
+/*
+ * INERT — DO NOT RUN
+ * 
+ * CVE-2024-31621 FIX: Case-insensitive authentication check
+ * CWE-178: Improper Handling of Case Sensitivity
+ * OWASP: A01:2021 – Broken Access Control
+ * 
+ * Fix: Use case-insensitive URL matching and proper route handling
+ */
+
+// SECURE: Case-insensitive URL matching
+this.app.use((req, res, next) => {
+  const normalizedUrl = req.url.toLowerCase();
+  if (normalizedUrl.includes('/api/v1/')) {
+    const isWhitelisted = whitelistURLs.some((url) => 
+      normalizedUrl.includes(url.toLowerCase())
+    );
+    isWhitelisted ? next() : basicAuthMiddleware(req, res, next);
+  } else next();
+});
+
+// ALTERNATIVE: Use Express router with case-insensitive matching
+const router = express.Router({ caseSensitive: false });
+router.use('/api/v1/*', (req, res, next) => {
+  const isWhitelisted = whitelistURLs.some((url) => 
+    req.path.toLowerCase().includes(url.toLowerCase())
+  );
+  isWhitelisted ? next() : basicAuthMiddleware(req, res, next);
+});

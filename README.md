@@ -28,8 +28,8 @@ security-faux-pas/
 ├─ CONTRIBUTING.md
 ├─ examples/
 │  ├─ typescript/
-│  │  ├─ 01-bof.vuln.example
-│  │  ├─ 01-bof.fix.example
+│  │  ├─ 01-auth-bypass.vuln.example
+│  │  ├─ 01-auth-bypass.fix.example
 │  │  └─ README.md
 │  ├─ c/
 │  ├─ java/
@@ -45,24 +45,26 @@ security-faux-pas/
 └─ .github/
    └─ workflows/
       └─ enforce-nonrunnable.yml
+```
 
 
-
-## Rules of use
-1. **Do not execute any example.**  
+## ⚖️ Rules of use
+1. **Do not execute any example.** 🚫  
    All `.vuln.example` and `.fix.example` files are deliberately incomplete or contain placeholders.
-2. **For learning only.** Study patterns, discuss mitigations, compare insecure vs secure.
+2. **For learning only.** 📚 Study patterns, discuss mitigations, compare insecure vs secure.
 3. **Contributors must follow safety policies.** See `CONTRIBUTING.md`. CI enforces:
    - `INERT — DO NOT RUN` header present,
    - no executable bits / shebangs,
    - no runnable `main` entrypoints.
-4. **No exploits/payloads.** PRs adding them will be rejected.
+4. **No exploits/payloads.** ❌ PRs adding them will be rejected.
 
-## How to use
+## 📖 How to use
 - Open `examples/<language>/*.{vuln,fix}.example` to read insecure pattern and remediation.
 - See `docs/mapping.md` for CWE/OWASP references.
+- Browse language-specific folders:
+  - [🟦 TypeScript examples](examples/typescript/README.md)
 
-## Need runnable labs?
+## 🔬 Need runnable labs?
 Create a **private, isolated training environment** under supervision.  
 This public repo is intentionally inert.
 

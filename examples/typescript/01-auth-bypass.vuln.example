@@ -1,0 +1,23 @@
+/*
+ * INERT — DO NOT RUN
+ * 
+ * CVE-2024-31621: Authentication Bypass via Case Sensitivity
+ * CWE-178: Improper Handling of Case Sensitivity
+ * OWASP: A01:2021 – Broken Access Control
+ * 
+ * Vulnerability: Case-sensitive URL matching allows bypass of authentication
+ * Source: Flowise 1.6.5 Express middleware
+ */
+
+// VULNERABLE: Case-sensitive URL matching
+this.app.use((req, res, next) => {
+  if (req.url.includes('/api/v1/')) {
+    whitelistURLs.some((url) => req.url.includes(url)) ?
+      next() : basicAuthMiddleware(req, res, next);
+  } else next();
+});
+
+/*
+ * Attack vector: /API/V1/credentials bypasses authentication
+ * Impact: Unauthorized access to protected endpoints
+ */

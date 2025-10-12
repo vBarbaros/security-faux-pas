@@ -26,7 +26,7 @@ security-faux-pas/
 ├─ README.md
 ├─ DISCLAIMER.md
 ├─ CONTRIBUTING.md
-├─ examples/
+├─ vulnerabilities/
 │  ├─ typescript/
 │  │  ├─ 01-auth-bypass.vuln.example
 │  │  ├─ 01-auth-bypass.fix.example
@@ -59,12 +59,12 @@ security-faux-pas/
 4. **No exploits/payloads.** ❌ PRs adding them will be rejected.
 
 ## 📖 How to use
-- Open `examples/<language>/*.{vuln,fix}.example` to read insecure pattern and remediation.
+- Open `vulnerabilities/<language>/*.{vuln,fix}.example` to read insecure pattern and remediation.
 - See `docs/mapping.md` for CWE/OWASP references.
 - Browse language-specific folders:
-  - [🟦 TypeScript examples](examples/typescript/README.md)
-  - [🐍 Python examples](examples/python/README.md)
-  - [☕ Java examples](examples/java/README.md)
+  - [🟦 TypeScript examples](vulnerabilities/typescript/README.md)
+  - [🐍 Python examples](vulnerabilities/python/README.md)
+  - [☕ Java examples](vulnerabilities/java/README.md)
 
 ## 🔬 Need runnable labs?
 Create a **private, isolated training environment** under supervision.  

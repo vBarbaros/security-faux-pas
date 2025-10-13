@@ -30,8 +30,8 @@ security-faux-pas/
 ├─ CONTRIBUTING.md
 ├─ vulnerabilities/
 │  ├─ typescript/
-│  │  ├─ 01-auth-bypass.vuln.example
-│  │  ├─ 01-auth-bypass.fix.example
+│  │  ├─ CVE-2024-31621-auth-bypass.vuln.example
+│  │  ├─ CVE-2024-31621-auth-bypass.fix.example
 │  │  └─ README.md
 │  ├─ c/
 │  ├─ java/
@@ -61,7 +61,7 @@ security-faux-pas/
 4. **No exploits/payloads.** ❌ PRs adding them will be rejected.
 
 ## 📖 How to use
-- Open `vulnerabilities/<language>/*.{vuln,fix}.example` to read insecure pattern and remediation.
+- Open `vulnerabilities/<language>/CVE-*-*.{vuln,fix}.example` to read insecure pattern and remediation.
 - See `docs/mapping.md` for CWE/OWASP references.
 - Browse language-specific folders:
   - [🟦 TypeScript examples](vulnerabilities/typescript/README.md)

@@ -2,29 +2,59 @@
 
 Thank you! Contributions are welcome — under strict safety rules.
 
+## File structure for CVE examples
+
+Each CVE must include **both** vulnerable and fixed examples:
+
+```
+vulnerabilities/<language>/
+├── CVE-YYYY-NNNNN-<description>.vuln.example
+├── CVE-YYYY-NNNNN-<description>.fix.example
+└── README.md (updated with new CVE entry)
+```
+
+**Naming convention:**
+- `CVE-YYYY-NNNNN-<short-description>.vuln.example`
+- `CVE-YYYY-NNNNN-<short-description>.fix.example`
+
 ## Required for every example
-1. File names:
-    - `*.vuln.example` for the vulnerable snippet (inert).
-    - `*.fix.example` for the remediation snippet (inert).
-2. Do **not** add any directly executable file:
-    - No `#!` shebangs.
-    - No intact `main()`/entrypoints that compile/run.
-    - No scripts that call `eval`, `system`, `exec`, or shells in working form.
-    - No binaries; no files with the executable bit set.
-3. Each example begins with a header in the **first 8 lines**:
-    - Title, language, **CWE**, **OWASP** (if applicable).
-    - The line: `STATUS: INERT — DO NOT RUN`
-    - One-sentence rationale for why it’s insecure (for `*.vuln.example`) or how it’s mitigated (for `*.fix.example`).
-4. Update the per-language `README.md`:
-    - Note that examples are inert, how to **read** them, and mitigations/references.
-5. Tests: **non-executable checks only** (e.g., lint that verifies headers present).  
-   No PoC automation or exploitation.
+
+1. **Header format** (first 8 lines):
+   ```
+   /*
+    * INERT — DO NOT RUN
+    * 
+    * CVE-YYYY-NNNNN: <Vulnerability Title>
+    * CWE-XXX: <CWE Description>
+    * OWASP: <OWASP Category>
+    * 
+    * Vulnerability: <Brief description>
+    * Source: <Affected software/versions>
+    */
+   ```
+
+2. **Exit statement** (immediately after header):
+   - **Python**: `import sys; sys.exit(-1)`
+   - **TypeScript/JavaScript**: `process.exit(-1);`
+   - **Java**: `static { System.exit(-1); }` (first line in class)
+
+3. **Safety requirements**:
+   - No `#!` shebangs
+   - No executable bits set
+   - No runnable `main()` functions
+   - No working `eval`, `system`, `exec` calls
+
+4. **Documentation**:
+   - Update language-specific `README.md`
+   - Add CWE/OWASP mapping to `docs/mapping.md`
 
 ## PR checklist
-- [ ] Files use `.vuln.example` / `.fix.example` extensions.
-- [ ] Header includes `INERT — DO NOT RUN` within first 8 lines.
-- [ ] No shebangs / no executable bits / no runnable `main`.
-- [ ] Per-language README updated.
-- [ ] CWE/OWASP mapping included (and `docs/mapping.md` updated if needed).
+- [ ] Both `.vuln.example` and `.fix.example` files created
+- [ ] CVE naming convention followed
+- [ ] Header includes `INERT — DO NOT RUN` in first 8 lines
+- [ ] Exit statement added after header
+- [ ] No executable code/shebangs/bits
+- [ ] Language README.md updated
+- [ ] CWE/OWASP mapping documented
 
 If unsure, open a draft PR and request review.
